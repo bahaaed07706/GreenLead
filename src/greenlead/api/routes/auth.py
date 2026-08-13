@@ -63,7 +63,7 @@ async def login_post(
         key="session",
         value=token,
         httponly=True,
-        secure=(settings.app_env == "production"),
+        secure=settings.use_secure_cookies,
         samesite="lax",
         max_age=86400 * 7,
     )

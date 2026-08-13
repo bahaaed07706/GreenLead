@@ -22,6 +22,13 @@ class Settings(BaseSettings):
     admin_username: str = "admin"
     admin_password_hash: str = ""
 
+    # Force the `Secure` flag on the session cookie independently of APP_ENV.
+    # Left unset it follows APP_ENV == "production", which is the right default
+    # for real deployments. The public demo needs it explicitly: it is served
+    # over HTTPS but does not run as APP_ENV=production, because the demo seed
+    # script deliberately refuses to run in a production environment.
+    session_cookie_secure: bool | None = None
+
     # Persistence
     # When set (e.g. sqlite:///./greenlead.db or postgresql+psycopg://...),
     # the SQL repository backend is used and data survives restarts.
@@ -37,6 +44,13 @@ class Settings(BaseSettings):
     tavily_api_key: str | None = None
     google_sheet_id: str | None = None
     google_service_account_file: str | None = None
+
+    @property
+    def use_secure_cookies(self) -> bool:
+        """Whether the session cookie carries the `Secure` flag."""
+        if self.session_cookie_secure is not None:
+            return self.session_cookie_secure
+        return self.app_env == "production"
 
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"

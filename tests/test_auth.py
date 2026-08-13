@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from greenlead.application import create_app
+from greenlead.core.config import Settings
 
 app = create_app()
 client = TestClient(app)
@@ -70,3 +71,19 @@ def test_language_switch() -> None:
     assert response_en.status_code == 200
     assert "Sign In" in response_en.text
     assert 'dir="ltr"' in response_en.text
+
+
+def test_secure_cookie_follows_app_env_by_default() -> None:
+    """Unset, the Secure flag tracks APP_ENV — production on, otherwise off."""
+    assert Settings(app_env="production").use_secure_cookies is True
+    assert Settings(app_env="development").use_secure_cookies is False
+    assert Settings(app_env="demo").use_secure_cookies is False
+
+
+def test_secure_cookie_can_be_forced_independently_of_app_env() -> None:
+    """The public demo runs over HTTPS without being APP_ENV=production."""
+    assert Settings(app_env="demo", session_cookie_secure=True).use_secure_cookies
+    assert (
+        Settings(app_env="production", session_cookie_secure=False).use_secure_cookies
+        is False
+    )

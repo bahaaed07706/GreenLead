@@ -206,9 +206,35 @@ access, a record that exists and one that doesn't must be indistinguishable
 
 ---
 
+## 8. Customize your hosted demo
+
+If you deployed with the **Deploy to Render** button, your instance is described
+by [`render.yaml`](../render.yaml). Edit the `envVars` block there and push —
+Render redeploys automatically:
+
+```yaml
+- key: ORG_NAME
+  value: Acme Corp
+- key: ORG_INDUSTRY
+  value: Manufacturing
+- key: APP_NAME
+  value: Acme Pipeline
+```
+
+To change the demo dataset itself — different companies, contacts or logins —
+edit `scripts/seed_demo.py`. It re-runs on every boot, so a push is all it takes.
+
+If you want the demo to **keep** what visitors enter instead of resetting on each
+boot, attach a Render PostgreSQL instance, point `DATABASE_URL` at it, and drop
+the `python scripts/seed_demo.py` step from `startCommand`.
+
+---
+
 ## Security reminders when you deploy
 
 - Generate a real `SECRET_KEY` — never ship the placeholder.
+- Set `SESSION_COOKIE_SECURE=true` whenever the app is served over HTTPS but is
+  not running as `APP_ENV=production` (this is exactly the demo's situation).
 - Generate your own `ADMIN_PASSWORD_HASH`:
   ```bash
   python -c "from passlib.hash import bcrypt; print(bcrypt.hash('your-password'))"

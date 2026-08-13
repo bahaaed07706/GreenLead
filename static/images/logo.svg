@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none">
+  <!-- GreenLead Product Identity: Connected Data Nodes & Forward Progression -->
+  <!-- Node Connection Paths -->
+  <path d="M12 36 L24 24 L36 12" stroke="#1B7458" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M24 24 L36 30" stroke="#60716A" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M12 20 L24 24" stroke="#60716A" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Connected Lead Nodes -->
+  <circle cx="12" cy="36" r="4.5" fill="#12352D" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="12" cy="20" r="3.5" fill="#1B7458"/>
+  <circle cx="24" cy="24" r="5" fill="#1B7458" stroke="#FFFFFF" stroke-width="2"/>
+  <circle cx="36" cy="30" r="3.5" fill="#60716A"/>
+  
+  <!-- Forward Decision-Maker Anchor Node -->
+  <circle cx="36" cy="12" r="5.5" fill="#9B762A" stroke="#FFFFFF" stroke-width="1.5"/>
+  <path d="M34 12 L35.5 13.5 L38.5 10.5" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

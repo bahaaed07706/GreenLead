@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="app-layout">
+    <!-- Deep Forest Sidebar Navigation -->
+    <aside class="sidebar">
+        <a href="/" class="sidebar-brand">
+            <img src="/static/images/logo.svg" alt="GreenLead Logo" class="sidebar-logo">
+            <div class="sidebar-brand-text">
+                <div class="brand-name">Green<span>Lead</span></div>
+                <div class="brand-tag">Sales Intelligence</div>
+            </div>
+        </a>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Core Operations</div>
+            <ul class="nav-menu">
+                <li>
+                    <a href="/" class="nav-link">
+                        <span>{{ t.nav_home }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/companies/" class="nav-link active">
+                        <span>{{ t.nav_companies }}</span>
+                    </a>
+                </li>
+                <li>
+                    <span class="nav-link disabled">
+                        <span>{{ t.nav_opportunities }}</span>
+                        <span class="nav-badge-disabled">Soon</span>
+                    </span>
+                </li>
+                <li>
+                    <span class="nav-link disabled">
+                        <span>{{ t.nav_assistant }}</span>
+                        <span class="nav-badge-disabled">Soon</span>
+                    </span>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- Main Workspace Canvas -->
+    <main class="main-content">
+        <!-- Top Header Bar -->
+        <header class="top-header">
+            <div class="header-title-area">
+                <h1 style="font-size:1.05rem; font-weight:700; color:var(--text-primary);">{{ t.companies_title }}</h1>
+            </div>
+            
+            <div class="header-user-area">
+                <div class="user-profile-badge">
+                    <span class="user-avatar-dot"></span>
+                    <span style="font-weight:600;">{{ username if username else 'admin' }}</span>
+                </div>
+                
+                {% if lang == 'ar' %}
+                    <a href="/set-language?lang=en" class="lang-switch-btn">English</a>
+                {% else %}
+                    <a href="/set-language?lang=ar" class="lang-switch-btn">العربية</a>
+                {% endif %}
+
+                <form method="POST" action="/logout" style="margin:0;">
+                    <button type="submit" class="btn btn-ghost btn-sm">{{ t.logout }}</button>
+                </form>
+            </div>
+        </header>
+
+        <!-- Body Content -->
+        <div class="content-body">
+            <div class="page-header">
+                <div>
+                    <h2 class="page-title">{{ t.companies_title }}</h2>
+                    <div class="page-subtitle">Directory of your target accounts</div>
+                </div>
+                <div>
+                    <a href="/companies/new" class="btn btn-primary">+ {{ t.add_company }}</a>
+                </div>
+            </div>
+
+            <!-- Server-Side Search Bar -->
+            <div class="dashboard-card" style="margin-bottom:1.5rem; padding:1.25rem;">
+                <form method="GET" action="/companies/" style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:240px;">
+                        <input type="text" name="q" value="{{ q }}" class="form-control"
+                               placeholder="{% if lang == 'ar' %}البحث حسب اسم الشركة أو الدومين...{% else %}Search by company name or domain...{% endif %}"
+                               aria-label="Search Companies" autocomplete="off" dir="auto">
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        {% if lang == 'ar' %}بحث{% else %}Search{% endif %}
+                    </button>
+                    {% if q %}
+                    <a href="/companies/" class="btn btn-ghost">
+                        {% if lang == 'ar' %}إلغاء البحث{% else %}Reset Search{% endif %}
+                    </a>
+                    {% endif %}
+                </form>
+                {% if q %}
+                <div style="font-size:0.82rem; color:var(--text-secondary); margin-top:0.6rem;">
+                    {% if lang == 'ar' %}
+                        نتائج البحث عن: <strong>"{{ q }}"</strong> ({{ companies | length }})
+                    {% else %}
+                        Search results for: <strong>"{{ q }}"</strong> ({{ companies | length }} found)
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            {% if companies %}
+            <div class="company-table-wrapper">
+                <table class="company-table">
+                    <thead>
+                        <tr>
+                            <th>{{ t.company_name_en }}</th>
+                            <th>{{ t.domain }}</th>
+                            <th>{{ t.sector }}</th>
+                            <th>{{ t.city }}</th>
+                            <th style="text-align:end;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for company in companies %}
+                        <tr onclick="window.location='/companies/{{ company.id }}'" style="cursor:pointer;">
+                            <td>
+                                <a href="/companies/{{ company.id }}" class="table-link">
+                                    {{ company.name_en }}
+                                </a>
+                                {% if company.name_ar %}
+                                    <div style="font-size:0.8rem; color:var(--text-secondary);">{{ company.name_ar }}</div>
+                                {% endif %}
+                            </td>
+                            <td dir="ltr" style="color:var(--text-secondary); font-size:0.88rem;">
+                                {{ company.domain or '—' }}
+                            </td>
+                            <td>
+                                {% if company.sector %}
+                                    <span class="badge status-verified">{{ company.sector }}</span>
+                                {% else %}
+                                    <span class="badge status-unverified">—</span>
+                                {% endif %}
+                            </td>
+                            <td style="color:var(--text-secondary); font-size:0.88rem;">
+                                {{ company.city or '—' }}
+                            </td>
+                            <td style="text-align:end;">
+                                <a href="/companies/{{ company.id }}" class="btn btn-ghost btn-sm">View Details →</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <img src="/static/images/logo.svg" alt="GreenLead" style="width:48px; opacity:0.6; margin-bottom:1rem;">
+                <div class="empty-state-title">
+                    {% if q %}
+                        {% if lang == 'ar' %}لم يتم العثور على نتائج للبحث{% else %}No search results found{% endif %}
+                    {% else %}
+                        {{ t.empty_companies_title }}
+                    {% endif %}
+                </div>
+                <div class="empty-state-text">
+                    {% if q %}
+                        {% if lang == 'ar' %}لا توجد شركات تطابق نَص البحث "{{ q }}". جرّب البحث بكلمة أخرى أو قم بإلغاء الفلتر.{% else %}No company records match query "{{ q }}". Try a different term or clear the filter.{% endif %}
+                    {% else %}
+                        {{ t.empty_companies_text }}
+                    {% endif %}
+                </div>
+                {% if q %}
+                    <a href="/companies/" class="btn btn-secondary">
+                        {% if lang == 'ar' %}إعادة تعيين البحث{% else %}Clear Search Filter{% endif %}
+                    </a>
+                {% else %}
+                    <a href="/companies/new" class="btn btn-primary">+ {{ t.add_company }}</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+{% endblock %}

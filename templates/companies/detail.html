@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="app-layout">
+    <!-- Deep Forest Sidebar Navigation -->
+    <aside class="sidebar">
+        <a href="/" class="sidebar-brand">
+            <img src="/static/images/logo.svg" alt="GreenLead Logo" class="sidebar-logo">
+            <div class="sidebar-brand-text">
+                <div class="brand-name">Green<span>Lead</span></div>
+                <div class="brand-tag">Sales Intelligence</div>
+            </div>
+        </a>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Core Operations</div>
+            <ul class="nav-menu">
+                <li>
+                    <a href="/" class="nav-link">
+                        <span>{{ t.nav_home }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/companies/" class="nav-link active">
+                        <span>{{ t.nav_companies }}</span>
+                    </a>
+                </li>
+                <li>
+                    <span class="nav-link disabled">
+                        <span>{{ t.nav_opportunities }}</span>
+                        <span class="nav-badge-disabled">Soon</span>
+                    </span>
+                </li>
+                <li>
+                    <span class="nav-link disabled">
+                        <span>{{ t.nav_assistant }}</span>
+                        <span class="nav-badge-disabled">Soon</span>
+                    </span>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- Main Workspace Canvas -->
+    <main class="main-content">
+        <!-- Top Header Bar -->
+        <header class="top-header">
+            <div class="header-title-area">
+                <a href="/companies/" style="color:var(--text-secondary); text-decoration:none; font-size:0.9rem; font-weight:600;">← {{ t.back_to_companies }}</a>
+            </div>
+            
+            <div class="header-user-area">
+                <div class="user-profile-badge">
+                    <span class="user-avatar-dot"></span>
+                    <span style="font-weight:600;">{{ username if username else 'admin' }}</span>
+                </div>
+                
+                {% if lang == 'ar' %}
+                    <a href="/set-language?lang=en" class="lang-switch-btn">English</a>
+                {% else %}
+                    <a href="/set-language?lang=ar" class="lang-switch-btn">العربية</a>
+                {% endif %}
+
+                <form method="POST" action="/logout" style="margin:0;">
+                    <button type="submit" class="btn btn-ghost btn-sm">{{ t.logout }}</button>
+                </form>
+            </div>
+        </header>
+
+        <!-- Body Content -->
+        <div class="content-body">
+            {% if not_found %}
+                <div class="empty-state">
+                    <div class="empty-state-title">404</div>
+                    <div class="empty-state-text">{{ t.no_companies }}</div>
+                    <a href="/companies/" class="btn btn-primary">{{ t.back_to_companies }}</a>
+                </div>
+            {% else %}
+            <div class="page-header">
+                <div>
+                    <h2 class="page-title">{{ company.name_ar if lang == 'ar' and company.name_ar else company.name_en }}</h2>
+                    {% if company.name_ar and lang == 'en' %}
+                        <div class="page-subtitle" dir="rtl">{{ company.name_ar }}</div>
+                    {% elif company.name_en and lang == 'ar' %}
+                        <div class="page-subtitle">{{ company.name_en }}</div>
+                    {% endif %}
+                </div>
+                <div>
+                    <a href="/companies/{{ company.id }}/contacts/new" class="btn btn-primary">+ {{ t.add_contact }}</a>
+                </div>
+            </div>
+
+            <!-- Company Overview Grid -->
+            <div class="detail-grid">
+                {% if company.domain %}
+                <div class="detail-field">
+                    <span class="detail-label">{{ t.domain }}</span>
+                    <a href="https://{{ company.domain }}" target="_blank" rel="noopener" class="detail-value" dir="ltr" style="color:var(--primary);">{{ company.domain }} ↗</a>
+                </div>
+                {% endif %}
+                {% if company.sector %}
+                <div class="detail-field">
+                    <span class="detail-label">{{ t.sector }}</span>
+                    <span class="detail-value"><span class="badge status-verified">{{ company.sector }}</span></span>
+                </div>
+                {% endif %}
+                {% if company.city %}
+                <div class="detail-field">
+                    <span class="detail-label">{{ t.city }}</span>
+                    <span class="detail-value">{{ company.city }}</span>
+                </div>
+                {% endif %}
+                <div class="detail-field">
+                    <span class="detail-label">{{ t.verification_status }}</span>
+                    <span class="detail-value"><span class="badge status-verified">{{ company.verification_status }}</span></span>
+                </div>
+                {% if company.created_at %}
+                <div class="detail-field">
+                    <span class="detail-label">{{ t.created_at }}</span>
+                    <span class="detail-value" dir="ltr" style="color:var(--text-muted);">{{ company.created_at[:10] }}</span>
+                </div>
+                {% endif %}
+                <div class="detail-field">
+                    <span class="detail-label">{{ t.record_owner }}</span>
+                    <span class="detail-value">
+                        {% if owner %}{{ owner.name or owner.username }}
+                        {% else %}<span class="badge status-warning">{{ t.unassigned }}</span>{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            {% if can_reassign %}
+            <div class="dashboard-card" style="margin-bottom:1.75rem;">
+                <div class="dashboard-card-header">
+                    <div class="dashboard-card-title">{{ t.reassign }}</div>
+                </div>
+                <form method="POST" action="/companies/{{ company.id }}/reassign" style="display:flex; gap:0.75rem; align-items:flex-end; flex-wrap:wrap;">
+                    <div class="form-group" style="margin:0; min-width:220px;">
+                        <label for="new_owner_id" class="form-label">{{ t.reassign_to }}</label>
+                        <select id="new_owner_id" name="new_owner_id" class="form-select" required>
+                            <option value="">—</option>
+                            {% for u in assignable_users %}
+                            <option value="{{ u.id }}" {% if owner and owner.id == u.id %}selected{% endif %}>{{ u.name or u.username }} ({{ u.role }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-secondary">{{ t.reassign }}</button>
+                </form>
+            </div>
+            {% endif %}
+
+            {% if company.description %}
+            <div class="dashboard-card" style="margin-bottom:1.75rem;">
+                <div class="dashboard-card-header">
+                    <div class="dashboard-card-title">{{ t.company_description }}</div>
+                </div>
+                <div style="font-size:0.92rem; color:var(--text-secondary); line-height:1.6;">{{ company.description }}</div>
+            </div>
+            {% endif %}
+
+            <!-- Contacts Section -->
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <div class="dashboard-card-title">{{ t.contacts_section_title }}</div>
+                    <a href="/companies/{{ company.id }}/contacts/new" class="btn btn-primary btn-sm">+ {{ t.add_contact }}</a>
+                </div>
+
+                {% if contacts %}
+                <div class="company-table-wrapper">
+                    <table class="company-table">
+                        <thead>
+                            <tr>
+                                <th>{{ t.contact_name }}</th>
+                                <th>{{ t.contact_title }}</th>
+                                <th>{{ t.contact_email }} / {{ t.contact_phone }}</th>
+                                <th>{{ t.contact_relationship_level }}</th>
+                                <th>{{ t.contact_notes }}</th>
+                                <th style="text-align:end;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for contact in contacts %}
+                            <tr>
+                                <td>
+                                    <div style="font-weight:600; color:var(--text-primary);">
+                                        {{ contact.name }}
+                                        {% if contact.is_decision_maker %}
+                                            <span class="badge badge-star" title="{{ t.decision_maker_badge }}">★ {{ t.decision_maker_badge }}</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td style="color:var(--text-secondary); font-size:0.88rem;">{{ contact.title or '—' }}</td>
+                                <td>
+                                    {% if contact.email %}<div dir="ltr"><a href="mailto:{{ contact.email }}" style="color:var(--primary); font-size:0.85rem;">{{ contact.email }}</a></div>{% endif %}
+                                    {% if contact.phone %}<div dir="ltr" style="color:var(--text-muted); font-size:0.8rem;">{{ contact.phone }}</div>{% endif %}
+                                    {% if not contact.email and not contact.phone %}—{% endif %}
+                                </td>
+                                <td>
+                                    {% if contact.relationship_level == 'Decision Maker' or contact.is_decision_maker %}
+                                        <span class="badge badge-star">Decision Maker</span>
+                                    {% else %}
+                                        <span class="badge status-unverified">{{ contact.relationship_level or 'Contact' }}</span>
+                                    {% endif %}
+                                </td>
+                                <td style="color:var(--text-secondary); font-size:0.85rem;">
+                                    {{ contact.notes or '—' }}
+                                    {% if contact.source_url %}
+                                        <div dir="ltr"><a href="{{ contact.source_url }}" target="_blank" rel="noopener" style="color:var(--primary); font-size:0.75rem;">Source ↗</a></div>
+                                    {% endif %}
+                                </td>
+                                <td style="text-align:end;">
+                                    <div style="display:flex; gap:0.4rem; justify-content:flex-end; align-items:center;">
+                                        <a href="/companies/{{ company.id }}/contacts/{{ contact.id }}/edit" class="btn btn-ghost btn-sm">{{ t.edit }}</a>
+                                        <form method="POST" action="/companies/{{ company.id }}/contacts/{{ contact.id }}/delete" style="margin:0;" onsubmit="return confirm('{{ t.confirm_delete_contact }}');">
+                                            <button type="submit" class="btn btn-danger btn-sm">{{ t.delete }}</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state" style="padding: 2rem;">
+                    <div class="empty-state-title" style="font-size:0.95rem;">{{ t.no_contacts }}</div>
+                    <a href="/companies/{{ company.id }}/contacts/new" class="btn btn-primary btn-sm" style="margin-top:0.75rem;">+ {{ t.add_contact }}</a>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+{% endblock %}

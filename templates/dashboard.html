@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="app-layout">
+    {% set active_nav = 'home' %}
+    {% include "_sidebar.html" %}
+
+    <!-- Main Workspace Canvas -->
+    <main class="main-content">
+        <!-- Top Header Bar -->
+        <header class="top-header">
+            <div class="header-title-area">
+                <h1 style="font-size:1.05rem; font-weight:700; color:var(--text-primary);">GreenLead Operational Workspace</h1>
+            </div>
+            
+            <div class="header-user-area">
+                <div class="user-profile-badge">
+                    <span class="user-avatar-dot"></span>
+                    <span style="font-weight:600;">{{ username }}</span>
+                </div>
+                
+                {% if lang == 'ar' %}
+                    <a href="/set-language?lang=en" class="lang-switch-btn">English</a>
+                {% else %}
+                    <a href="/set-language?lang=ar" class="lang-switch-btn">العربية</a>
+                {% endif %}
+
+                <form method="POST" action="/logout" style="margin:0;">
+                    <button type="submit" class="btn btn-ghost btn-sm">{{ t.logout }}</button>
+                </form>
+            </div>
+        </header>
+
+        <!-- Body Content -->
+        <div class="content-body">
+            <!-- 1. Page Header & Primary Actions -->
+            <div class="page-header">
+                <div>
+                    <h2 class="page-title">{{ t.dashboard_title }}</h2>
+                    <div class="page-subtitle">Real-time enterprise metrics & actionable work queue</div>
+                </div>
+                <div class="quick-actions-toolbar">
+                    <a href="/companies/new" class="btn btn-primary">+ {{ t.add_company }}</a>
+                    <a href="/followups/new" class="btn btn-secondary">+ {{ t.add_followup }}</a>
+                    <a href="/companies/" class="btn btn-secondary">{{ t.view_all_companies }}</a>
+                </div>
+            </div>
+
+            <!-- 1b. Today's Operational Routine -->
+            <div class="dashboard-grid-4" style="margin-bottom:1.75rem;">
+                <a href="/followups/" class="stat-card" style="text-decoration:none;">
+                    <div class="stat-number" style="color:var(--danger);">{{ summary.overdue_followups_count }}</div>
+                    <div class="stat-label">{{ t.overdue_followups_label }}</div>
+                </a>
+                <a href="/followups/" class="stat-card" style="text-decoration:none;">
+                    <div class="stat-number" style="color:var(--warning);">{{ summary.followups_due_today_count }}</div>
+                    <div class="stat-label">{{ t.due_today_label }}</div>
+                </a>
+                <a href="/meetings/?view=today" class="stat-card" style="text-decoration:none;">
+                    <div class="stat-number">{{ summary.meetings_today_count }}</div>
+                    <div class="stat-label">{{ t.meetings_today }}</div>
+                </a>
+                <a href="/meetings/?view=upcoming" class="stat-card" style="text-decoration:none;">
+                    <div class="stat-number">{{ summary.upcoming_meetings_count }}</div>
+                    <div class="stat-label">{{ t.view_upcoming }} · {{ t.nav_meetings }}</div>
+                </a>
+            </div>
+
+            {% if summary.next_meeting %}
+            <div class="dashboard-card" style="margin-bottom:1.75rem;">
+                <div class="dashboard-card-header">
+                    <span class="dashboard-card-title">{{ t.next_meeting }}</span>
+                    <a href="/meetings/{{ summary.next_meeting.id }}" class="btn btn-ghost btn-sm">{{ summary.next_meeting.subject }} →</a>
+                </div>
+                <div style="font-size:0.88rem; color:var(--text-secondary);" dir="ltr">
+                    {{ summary.next_meeting.meeting_date }} {{ summary.next_meeting.start_time }} · {{ summary.next_meeting.meeting_type }}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 2. Needs Attention Work Queue (Primary Operational Section) -->
+            <div class="dashboard-card alert-card" style="margin-bottom: 1.75rem;">
+                <div class="dashboard-card-header">
+                    <div style="display:flex; align-items:center; gap:0.75rem;">
+                        <span class="dashboard-card-title">{{ t.data_quality_alerts }}</span>
+                        <span class="badge {% if summary.work_queue %}status-warning{% else %}status-verified{% endif %}">
+                            {{ summary.work_queue | length }} Action Items
+                        </span>
+                    </div>
+                    {% if summary.work_queue %}
+                        <span style="font-size:0.8rem; color:var(--text-secondary); font-weight:600;">Prioritized Action Queue</span>
+                    {% else %}
+                        <span class="badge status-verified">✓ All Systems Healthy</span>
+                    {% endif %}
+                </div>
+
+                {% if summary.work_queue %}
+                <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                    {% for item in summary.work_queue %}
+                    <div style="display:flex; align-items:center; justify-content:space-between; padding:0.85rem 1rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); flex-wrap:wrap; gap:0.75rem;">
+                        <div style="display:flex; align-items:flex-start; gap:0.85rem; flex:1; min-width:260px;">
+                            {% if item.severity == 'high' %}
+                                <span class="badge status-danger" style="margin-top:0.15rem;">HIGH</span>
+                            {% elif item.severity == 'medium' %}
+                                <span class="badge status-warning" style="margin-top:0.15rem;">MEDIUM</span>
+                            {% else %}
+                                <span class="badge status-unverified" style="margin-top:0.15rem;">LOW</span>
+                            {% endif %}
+                            
+                            <div>
+                                <div style="font-weight:700; color:var(--text-primary); font-size:0.92rem;">
+                                    {{ item.issue_title_ar if lang == 'ar' else item.issue_title_en }}
+                                    <span style="font-weight:600; color:var(--primary); margin-inline-start:0.35rem;">— {{ item.record_name }}</span>
+                                </div>
+                                <div style="font-size:0.82rem; color:var(--text-secondary); margin-top:0.15rem;">
+                                    {{ item.explanation_ar if lang == 'ar' else item.explanation_en }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <a href="{{ item.link_url }}" class="btn btn-secondary btn-sm">
+                                {{ item.action_label_ar if lang == 'ar' else item.action_label_en }} →
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div style="color:var(--success); font-size:0.9rem; padding:1.25rem; text-align:center; font-weight:600; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm);">
+                    ✓ {{ t.system_healthy }} — All company profiles have decision makers, verified contacts, and source URLs.
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- 3. Four Compact Business Metrics -->
+            <div class="dashboard-grid-4">
+                <a href="/companies/" class="stat-card" style="text-decoration:none;">
+                    <div class="stat-number">{{ summary.total_companies }}</div>
+                    <div class="stat-label">{{ t.total_companies }}</div>
+                </a>
+                
+                <div class="stat-card">
+                    <div class="stat-number">{{ summary.total_contacts }}</div>
+                    <div class="stat-label">{{ t.total_contacts }}</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-number" style="color: var(--decision-maker);">{{ summary.decision_makers_count }}</div>
+                    <div class="stat-label">★ {{ t.decision_makers }}</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-number" style="font-size: 1.6rem;">
+                        <span style="color: var(--success);">{{ summary.verified_contacts_count }}</span> /
+                        <span style="color: var(--text-muted);">{{ summary.unverified_contacts_count }}</span>
+                    </div>
+                    <div class="stat-label">{{ t.verified_contacts }} / {{ t.unverified_contacts }}</div>
+                </div>
+            </div>
+
+            <!-- 4. Data Coverage Summary -->
+            <div class="dashboard-card" style="margin-bottom: 1.75rem;">
+                <div class="dashboard-card-header">
+                    <div class="dashboard-card-title">Data Coverage & Compliance Status</div>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1.25rem;">
+                    <div>
+                        <div style="font-size:0.8rem; color:var(--text-secondary); font-weight:600;">Verified Contacts Rate</div>
+                        {% set v_pct = (summary.verified_contacts_count / summary.total_contacts * 100) | round | int if summary.total_contacts > 0 else 0 %}
+                        <div style="font-size:1.5rem; font-weight:700; color:var(--primary); margin:0.2rem 0;">{{ v_pct }}%</div>
+                        <div class="progress-track"><div class="progress-fill" style="width: {{ v_pct }}%;"></div></div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.8rem; color:var(--text-secondary); font-weight:600;">Decision Maker Coverage</div>
+                        {% set dm_comp_pct = ((summary.total_companies - summary.companies_without_decision_maker_count) / summary.total_companies * 100) | round | int if summary.total_companies > 0 else 0 %}
+                        <div style="font-size:1.5rem; font-weight:700; color:var(--decision-maker); margin:0.2rem 0;">{{ dm_comp_pct }}%</div>
+                        <div class="progress-track"><div class="progress-fill" style="width: {{ dm_comp_pct }}%; background:var(--decision-maker);"></div></div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.8rem; color:var(--text-secondary); font-weight:600;">Audit Source URL Coverage</div>
+                        {% set src_pct = ((summary.total_contacts - summary.contacts_missing_source_url_count) / summary.total_contacts * 100) | round | int if summary.total_contacts > 0 else 0 %}
+                        <div style="font-size:1.5rem; font-weight:700; color:var(--info); margin:0.2rem 0;">{{ src_pct }}%</div>
+                        <div class="progress-track"><div class="progress-fill" style="width: {{ src_pct }}%; background:var(--info);"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Recent Companies and Contacts Tables -->
+            <div class="dashboard-grid-2">
+                <!-- Recently Added Companies -->
+                <div class="dashboard-card">
+                    <div class="dashboard-card-header">
+                        <div class="dashboard-card-title">{{ t.recent_companies }}</div>
+                        <a href="/companies/" style="font-size:0.8rem; font-weight:600;">{{ t.view_all_companies }} →</a>
+                    </div>
+                    
+                    {% if summary.recent_companies %}
+                    <div class="company-table-wrapper">
+                        <table class="company-table">
+                            <thead>
+                                <tr>
+                                    <th>{{ t.company_name }}</th>
+                                    <th>{{ t.sector }}</th>
+                                    <th>{{ t.created_date }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for company in summary.recent_companies %}
+                                <tr>
+                                    <td>
+                                        <a href="/companies/{{ company.id }}" class="table-link">
+                                            {{ company.name_ar if lang == 'ar' and company.name_ar else company.name_en }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="badge status-verified">{{ company.sector or org_industry }}</span>
+                                    </td>
+                                    <td dir="ltr" style="font-size:0.8rem; color:var(--text-muted);">
+                                        {{ company.created_at[:10] if company.created_at else "N/A" }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state" style="padding:1.5rem;">
+                        <div class="empty-state-title" style="font-size:0.95rem;">{{ t.no_companies_found }}</div>
+                        <a href="/companies/new" class="btn btn-primary btn-sm" style="margin-top:0.5rem;">+ {{ t.add_company }}</a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Recently Added Contacts -->
+                <div class="dashboard-card">
+                    <div class="dashboard-card-header">
+                        <div class="dashboard-card-title">{{ t.recent_contacts }}</div>
+                    </div>
+                    
+                    {% if summary.recent_contacts %}
+                    <div class="company-table-wrapper">
+                        <table class="company-table">
+                            <thead>
+                                <tr>
+                                    <th>{{ t.full_name }}</th>
+                                    <th>{{ t.title_role }}</th>
+                                    <th>{{ t.relationship }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contact in summary.recent_contacts %}
+                                <tr>
+                                    <td>
+                                        <a href="/companies/{{ contact.company_id }}" style="font-weight:600; color:var(--text-primary); text-decoration:none;">
+                                            {{ contact.name }}
+                                        </a>
+                                        {% if contact.is_decision_maker or contact.relationship_level == 'Decision Maker' %}
+                                            <span class="badge badge-star" title="Decision Maker">★</span>
+                                        {% endif %}
+                                    </td>
+                                    <td style="font-size:0.85rem; color:var(--text-secondary);">
+                                        {{ contact.title or "N/A" }}
+                                    </td>
+                                    <td>
+                                        {% if contact.relationship_level == 'Decision Maker' or contact.is_decision_maker %}
+                                            <span class="badge badge-star">Decision Maker</span>
+                                        {% else %}
+                                            <span class="badge status-unverified">{{ contact.relationship_level or "Contact" }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state" style="padding:1.5rem;">
+                        <div class="empty-state-title" style="font-size:0.95rem;">{{ t.no_contacts_found }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 6. Functional Quick Actions Toolbar -->
+            <div class="quick-actions-toolbar" style="margin-bottom: 1.75rem;">
+                <a href="/companies/new" class="btn btn-primary">+ {{ t.add_company }}</a>
+                <a href="/companies/" class="btn btn-secondary">{{ t.view_all_companies }}</a>
+                <a href="/set-language?lang={% if lang == 'ar' %}en{% else %}ar{% endif %}" class="btn btn-ghost">
+                    {% if lang == 'ar' %}Switch to English{% else %}التحويل إلى العربية{% endif %}
+                </a>
+            </div>
+
+            <!-- 7. Compact System Status at Bottom (Secondary Technical Panel) -->
+            <div class="dashboard-card" style="border-top:2px solid var(--border);">
+                <div class="dashboard-card-header">
+                    <div class="dashboard-card-title" style="font-size:0.8rem;">System & Storage Integration Architecture</div>
+                </div>
+                
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:1.25rem;">
+                    <!-- Google Sheets -->
+                    <div>
+                        <div style="font-size:0.7rem; color:var(--text-muted); font-weight:700; letter-spacing:0.06em; margin-bottom:0.2rem;">GOOGLE SHEETS STORAGE</div>
+                        <div class="status-indicator">
+                            <span class="dot {% if summary.storage_status.state == 'live_verified' %}dot-green{% elif summary.storage_status.state == 'configured_unverified' %}dot-yellow{% elif summary.storage_status.state == 'error' %}dot-red{% else %}dot-gray{% endif %}"></span>
+                            <span style="font-size:0.82rem;">{{ summary.storage_status.status_label_ar if lang == 'ar' else summary.storage_status.status_label_en }}</span>
+                        </div>
+                        <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:0.15rem;">
+                            {{ summary.storage_status.details_ar if lang == 'ar' else summary.storage_status.details_en }}
+                        </div>
+                    </div>
+
+                    <!-- Tavily Search -->
+                    <div>
+                        <div style="font-size:0.7rem; color:var(--text-muted); font-weight:700; letter-spacing:0.06em; margin-bottom:0.2rem;">TAVILY SEARCH PROVIDER</div>
+                        <div class="status-indicator">
+                            <span class="dot {% if summary.research_status.state == 'live_verified' %}dot-green{% elif summary.research_status.state == 'configured_unverified' %}dot-yellow{% elif summary.research_status.state == 'error' %}dot-red{% else %}dot-gray{% endif %}"></span>
+                            <span style="font-size:0.82rem;">{{ summary.research_status.status_label_ar if lang == 'ar' else summary.research_status.status_label_en }}</span>
+                        </div>
+                        <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:0.15rem;">
+                            {{ summary.research_status.details_ar if lang == 'ar' else summary.research_status.details_en }}
+                        </div>
+                    </div>
+
+                    <!-- AI Provider -->
+                    <div>
+                        <div style="font-size:0.7rem; color:var(--text-muted); font-weight:700; letter-spacing:0.06em; margin-bottom:0.2rem;">AI ENRICHMENT PROVIDER</div>
+                        <div class="status-indicator">
+                            <span class="dot {% if summary.ai_status.state == 'live_verified' %}dot-green{% elif summary.ai_status.state == 'configured_unverified' %}dot-yellow{% elif summary.ai_status.state == 'error' %}dot-red{% else %}dot-gray{% endif %}"></span>
+                            <span style="font-size:0.82rem;">{{ summary.ai_status.status_label_ar if lang == 'ar' else summary.ai_status.status_label_en }}</span>
+                        </div>
+                        <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:0.15rem;">
+                            {{ summary.ai_status.details_ar if lang == 'ar' else summary.ai_status.details_en }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

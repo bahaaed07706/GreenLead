@@ -1,0 +1,30 @@
+{# Shared deep-forest sidebar. Pass active_nav = home|companies|followups|meetings #}
+<aside class="sidebar">
+    <a href="/" class="sidebar-brand">
+        <img src="/static/images/logo.svg" alt="GreenLead Logo" class="sidebar-logo">
+        <div class="sidebar-brand-text">
+            <div class="brand-name">Green<span>Lead</span></div>
+            <div class="brand-tag">Sales Intelligence</div>
+        </div>
+    </a>
+    <div class="nav-section">
+        <div class="nav-section-title">Core Operations</div>
+        <ul class="nav-menu">
+            <li><a href="/" class="nav-link {% if active_nav == 'home' %}active{% endif %}"><span>{{ t.nav_home }}</span></a></li>
+            <li><a href="/companies/" class="nav-link {% if active_nav == 'companies' %}active{% endif %}"><span>{{ t.nav_companies }}</span></a></li>
+            <li><a href="/followups/" class="nav-link {% if active_nav == 'followups' %}active{% endif %}"><span>{{ t.nav_followups }}</span></a></li>
+            <li><a href="/meetings/" class="nav-link {% if active_nav == 'meetings' %}active{% endif %}"><span>{{ t.nav_meetings }}</span></a></li>
+            <li><span class="nav-link disabled"><span>{{ t.nav_opportunities }}</span><span class="nav-badge-disabled">Soon</span></span></li>
+            <li><span class="nav-link disabled"><span>{{ t.nav_assistant }}</span><span class="nav-badge-disabled">Soon</span></span></li>
+        </ul>
+    </div>
+    {% if current_role == 'admin' %}
+    <div class="nav-section">
+        <div class="nav-section-title">{{ t.nav_administration }}</div>
+        <ul class="nav-menu">
+            <li><a href="/admin/users" class="nav-link {% if active_nav == 'users' %}active{% endif %}"><span>{{ t.nav_users }}</span></a></li>
+            <li><a href="/admin/audit" class="nav-link {% if active_nav == 'audit' %}active{% endif %}"><span>{{ t.nav_audit }}</span></a></li>
+        </ul>
+    </div>
+    {% endif %}
+</aside>

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="app-layout">
+    {% set active_nav = 'followups' %}
+    {% include "_sidebar.html" %}
+
+    <main class="main-content">
+        <header class="top-header">
+            <div class="header-title-area">
+                <a href="/followups/" style="color:var(--text-secondary); text-decoration:none; font-size:0.9rem; font-weight:600;">{{ t.back_to_followups }}</a>
+            </div>
+            <div class="header-user-area">
+                <div class="user-profile-badge">
+                    <span class="user-avatar-dot"></span>
+                    <span style="font-weight:600;">{{ username if username else 'admin' }}</span>
+                </div>
+                {% if lang == 'ar' %}
+                    <a href="/set-language?lang=en" class="lang-switch-btn">English</a>
+                {% else %}
+                    <a href="/set-language?lang=ar" class="lang-switch-btn">العربية</a>
+                {% endif %}
+                <form method="POST" action="/logout" style="margin:0;">
+                    <button type="submit" class="btn btn-ghost btn-sm">{{ t.logout }}</button>
+                </form>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <div class="page-header">
+                <div>
+                    <h2 class="page-title">{{ t.add_followup }}</h2>
+                    <div class="page-subtitle">Schedule a follow-up task against a company</div>
+                </div>
+            </div>
+
+            {% if error %}
+            <div class="alert-error" role="alert">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="/followups/new" class="form-card">
+                <div class="form-group">
+                    <label for="company_id" class="form-label">{{ t.followup_company }} *</label>
+                    <select id="company_id" name="company_id" class="form-select" required>
+                        <option value="">—</option>
+                        {% for c in companies %}
+                        <option value="{{ c.id }}" {% if form and form.company_id == c.id %}selected{% endif %}>{{ c.name_en }}{% if c.name_ar %} — {{ c.name_ar }}{% endif %}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="title" class="form-label">{{ t.followup_title_label }} *</label>
+                    <input type="text" id="title" name="title" class="form-control"
+                           value="{{ form.title if form else '' }}" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="due_date" class="form-label">{{ t.followup_due_date }}</label>
+                        <input type="date" id="due_date" name="due_date" class="form-control"
+                               value="{{ form.due_date if form else '' }}" dir="ltr">
+                    </div>
+                    <div class="form-group">
+                        <label for="priority" class="form-label">{{ t.followup_priority }}</label>
+                        <select id="priority" name="priority" class="form-select">
+                            <option value="High" {% if form and form.priority == 'High' %}selected{% endif %}>{{ t.priority_high }}</option>
+                            <option value="Medium" {% if not form or form.priority == 'Medium' %}selected{% endif %}>{{ t.priority_medium }}</option>
+                            <option value="Low" {% if form and form.priority == 'Low' %}selected{% endif %}>{{ t.priority_low }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description" class="form-label">{{ t.followup_description }}</label>
+                    <textarea id="description" name="description" class="form-control" rows="3">{{ form.description if form else '' }}</textarea>
+                </div>
+
+                <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+                    <button type="submit" class="btn btn-primary">{{ t.save }}</button>
+                    <a href="/followups/" class="btn btn-ghost">{{ t.cancel }}</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+{% endblock %}

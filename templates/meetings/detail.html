@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="app-layout">
+    {% set active_nav = 'meetings' %}
+    {% include "_sidebar.html" %}
+
+    <main class="main-content">
+        <header class="top-header">
+            <div class="header-title-area">
+                <a href="/meetings/" style="color:var(--text-secondary); text-decoration:none; font-size:0.9rem; font-weight:600;">{{ t.back_to_meetings }}</a>
+            </div>
+            <div class="header-user-area">
+                <div class="user-profile-badge">
+                    <span class="user-avatar-dot"></span>
+                    <span style="font-weight:600;">{{ username if username else 'admin' }}</span>
+                </div>
+                {% if lang == 'ar' %}
+                    <a href="/set-language?lang=en" class="lang-switch-btn">English</a>
+                {% else %}
+                    <a href="/set-language?lang=ar" class="lang-switch-btn">العربية</a>
+                {% endif %}
+                <form method="POST" action="/logout" style="margin:0;">
+                    <button type="submit" class="btn btn-ghost btn-sm">{{ t.logout }}</button>
+                </form>
+            </div>
+        </header>
+
+        <div class="content-body">
+            {% if not_found %}
+            <div class="empty-state">
+                <div class="empty-state-title">{{ t.no_meetings }}</div>
+                <a href="/meetings/" class="btn btn-primary" style="margin-top:1rem;">{{ t.back_to_meetings }}</a>
+            </div>
+            {% else %}
+            <div class="page-header">
+                <div>
+                    <h2 class="page-title">{{ meeting.subject }}</h2>
+                    <div class="page-subtitle">
+                        {% if company %}{{ company.name_en }} · {% endif %}
+                        {% if meeting.status == 'Completed' %}<span class="badge status-verified">{{ t.m_status_completed }}</span>
+                        {% elif meeting.status == 'Cancelled' %}<span class="badge status-unverified">{{ t.m_status_cancelled }}</span>
+                        {% elif meeting.status == 'No Show' %}<span class="badge status-danger">{{ t.m_status_no_show }}</span>
+                        {% else %}<span class="badge status-unverified">{{ t.m_status_scheduled }}</span>{% endif %}
+                    </div>
+                </div>
+                <div style="display:flex; gap:0.5rem;">
+                    {% if meeting.meeting_type == 'Online' and meeting.meeting_url %}
+                    <a href="{{ meeting.meeting_url }}" target="_blank" rel="noopener noreferrer nofollow" class="btn btn-secondary btn-sm" dir="ltr">{{ t.open_meeting_link }}</a>
+                    {% endif %}
+                    <a href="/meetings/{{ meeting.id }}/ics" class="btn btn-ghost btn-sm">{{ t.download_ics }}</a>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-row">
+                    <div class="form-group">
+                        <div class="form-label">{{ t.meeting_date }}</div>
+                        <div dir="ltr">{{ meeting.meeting_date or '—' }} {{ meeting.start_time }}{% if meeting.end_time %}–{{ meeting.end_time }}{% endif %}</div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-label">{{ t.meeting_type }}</div>
+                        <div>{{ meeting.meeting_type }}</div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-label">{{ t.meeting_participants }}</div>
+                        <div>{{ meeting.participants or '—' }}</div>
+                    </div>
+                </div>
+                {% if meeting.meeting_type == 'In Person' and meeting.location %}
+                <div class="form-group">
+                    <div class="form-label">{{ t.meeting_location }}</div>
+                    <div>{{ meeting.location }}</div>
+                </div>
+                {% endif %}
+                {% if meeting.agenda %}
+                <div class="form-group">
+                    <div class="form-label">{{ t.meeting_agenda }}</div>
+                    <div>{{ meeting.agenda }}</div>
+                </div>
+                {% endif %}
+                {% if meeting.outcome %}
+                <div class="form-group">
+                    <div class="form-label">{{ t.meeting_outcome }}</div>
+                    <div>{{ meeting.outcome }}</div>
+                </div>
+                {% endif %}
+                {% if meeting.followup_action %}
+                <div class="form-group">
+                    <div class="form-label">{{ t.meeting_followup_action }}</div>
+                    <div>{{ meeting.followup_action }}</div>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if meeting.status == 'Scheduled' %}
+            <div class="form-card" style="margin-top:1.25rem;">
+                <form method="POST" action="/meetings/{{ meeting.id }}/complete">
+                    <div class="form-group">
+                        <label for="outcome" class="form-label">{{ t.meeting_outcome }}</label>
+                        <textarea id="outcome" name="outcome" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="followup_action" class="form-label">{{ t.meeting_followup_action }}</label>
+                        <input type="text" id="followup_action" name="followup_action" class="form-control">
+                    </div>
+                    <div style="display:flex; gap:0.75rem;">
+                        <button type="submit" class="btn btn-primary">{{ t.record_outcome }}</button>
+                    </div>
+                </form>
+                <form method="POST" action="/meetings/{{ meeting.id }}/cancel" style="margin-top:0.75rem;">
+                    <button type="submit" class="btn btn-danger btn-sm">{{ t.cancel_meeting }}</button>
+                </form>
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+    </main>
+</div>
+{% endblock %}

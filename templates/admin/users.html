@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="app-layout">
+    {% set active_nav = 'users' %}
+    {% include "_sidebar.html" %}
+
+    <main class="main-content">
+        <header class="top-header">
+            <div class="header-title-area">
+                <a href="/" style="color:var(--text-secondary); text-decoration:none; font-size:0.9rem; font-weight:600;">{{ t.nav_home }}</a>
+            </div>
+            <div class="header-user-area">
+                <div class="user-profile-badge">
+                    <span class="user-avatar-dot"></span>
+                    <span style="font-weight:600;">{{ current_username if current_username else 'admin' }}</span>
+                </div>
+                {% if lang == 'ar' %}
+                    <a href="/set-language?lang=en" class="lang-switch-btn">English</a>
+                {% else %}
+                    <a href="/set-language?lang=ar" class="lang-switch-btn">العربية</a>
+                {% endif %}
+                <form method="POST" action="/logout" style="margin:0;">
+                    <button type="submit" class="btn btn-ghost btn-sm">{{ t.logout }}</button>
+                </form>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <div class="page-header">
+                <div>
+                    <h2 class="page-title">{{ t.users_title }}</h2>
+                    <div class="page-subtitle">Manage team accounts and roles</div>
+                </div>
+                <a href="/admin/users/new" class="btn btn-primary">+ {{ t.add_user }}</a>
+            </div>
+
+            {% if users %}
+            <div class="company-table-wrapper">
+                <table class="company-table">
+                    <thead>
+                        <tr>
+                            <th>{{ t.user_username }}</th>
+                            <th>{{ t.user_name }}</th>
+                            <th>{{ t.user_role }}</th>
+                            <th>{{ t.user_status }}</th>
+                            <th dir="ltr">{{ t.last_login_label }}</th>
+                            <th style="text-align:end;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td dir="ltr">{{ u.username }}</td>
+                            <td>{{ u.name or '—' }}</td>
+                            <td>
+                                {% if u.role == 'admin' %}<span class="badge status-warning">{{ t.role_admin }}</span>
+                                {% elif u.role == 'manager' %}<span class="badge status-verified">{{ t.role_manager }}</span>
+                                {% else %}<span class="badge status-unverified">{{ t.role_employee }}</span>{% endif %}
+                            </td>
+                            <td>
+                                {% if u.is_active %}<span class="badge status-verified">{{ t.user_active }}</span>
+                                {% else %}<span class="badge status-danger">{{ t.user_inactive }}</span>{% endif %}
+                            </td>
+                            <td dir="ltr" style="color:var(--text-secondary); font-size:0.85rem;">{{ u.last_login[:10] if u.last_login else '—' }}</td>
+                            <td style="text-align:end;">
+                                {% if u.username != current_username %}
+                                    {% if u.is_active %}
+                                    <form method="POST" action="/admin/users/{{ u.id }}/deactivate" style="margin:0;">
+                                        <button type="submit" class="btn btn-danger btn-sm">{{ t.deactivate }}</button>
+                                    </form>
+                                    {% else %}
+                                    <form method="POST" action="/admin/users/{{ u.id }}/activate" style="margin:0;">
+                                        <button type="submit" class="btn btn-ghost btn-sm">{{ t.activate }}</button>
+                                    </form>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-title">{{ t.no_users }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+{% endblock %}

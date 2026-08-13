@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="app-layout">
+    {% set active_nav = 'meetings' %}
+    {% include "_sidebar.html" %}
+
+    <main class="main-content">
+        <header class="top-header">
+            <div class="header-title-area">
+                <a href="/meetings/" style="color:var(--text-secondary); text-decoration:none; font-size:0.9rem; font-weight:600;">{{ t.back_to_meetings }}</a>
+            </div>
+            <div class="header-user-area">
+                <div class="user-profile-badge">
+                    <span class="user-avatar-dot"></span>
+                    <span style="font-weight:600;">{{ username if username else 'admin' }}</span>
+                </div>
+                {% if lang == 'ar' %}
+                    <a href="/set-language?lang=en" class="lang-switch-btn">English</a>
+                {% else %}
+                    <a href="/set-language?lang=ar" class="lang-switch-btn">العربية</a>
+                {% endif %}
+                <form method="POST" action="/logout" style="margin:0;">
+                    <button type="submit" class="btn btn-ghost btn-sm">{{ t.logout }}</button>
+                </form>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <div class="page-header">
+                <div>
+                    <h2 class="page-title">{{ t.add_meeting }}</h2>
+                    <div class="page-subtitle">Schedule a meeting with a target company</div>
+                </div>
+            </div>
+
+            {% if error %}
+            <div class="alert-error" role="alert">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="/meetings/new" class="form-card">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="company_id" class="form-label">{{ t.followup_company }} *</label>
+                        <select id="company_id" name="company_id" class="form-select" required>
+                            <option value="">—</option>
+                            {% for c in companies %}
+                            <option value="{{ c.id }}" {% if form and form.company_id == c.id %}selected{% endif %}>{{ c.name_en }}{% if c.name_ar %} — {{ c.name_ar }}{% endif %}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_id" class="form-label">{{ t.meeting_contact }}</label>
+                        <select id="contact_id" name="contact_id" class="form-select">
+                            <option value="">—</option>
+                            {% for row in contacts %}
+                            <option value="{{ row.contact.id }}" {% if form and form.contact_id == row.contact.id %}selected{% endif %}>{{ row.contact.name }} — {{ row.company_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject" class="form-label">{{ t.meeting_subject }} *</label>
+                    <input type="text" id="subject" name="subject" class="form-control" value="{{ form.subject if form else '' }}" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="meeting_date" class="form-label">{{ t.meeting_date }}</label>
+                        <input type="date" id="meeting_date" name="meeting_date" class="form-control" value="{{ form.meeting_date if form else '' }}" dir="ltr">
+                    </div>
+                    <div class="form-group">
+                        <label for="start_time" class="form-label">{{ t.meeting_start }}</label>
+                        <input type="time" id="start_time" name="start_time" class="form-control" value="{{ form.start_time if form else '' }}" dir="ltr">
+                    </div>
+                    <div class="form-group">
+                        <label for="end_time" class="form-label">{{ t.meeting_end }}</label>
+                        <input type="time" id="end_time" name="end_time" class="form-control" value="{{ form.end_time if form else '' }}" dir="ltr">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="meeting_type" class="form-label">{{ t.meeting_type }}</label>
+                        <select id="meeting_type" name="meeting_type" class="form-select">
+                            <option value="Online" {% if not form or form.meeting_type == 'Online' %}selected{% endif %}>{{ t.meeting_type_online }}</option>
+                            <option value="In Person" {% if form and form.meeting_type == 'In Person' %}selected{% endif %}>{{ t.meeting_type_in_person }}</option>
+                            <option value="Phone" {% if form and form.meeting_type == 'Phone' %}selected{% endif %}>{{ t.meeting_type_phone }}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="meeting_url" class="form-label">{{ t.meeting_url }} <span style="color:var(--text-muted);">(Online)</span></label>
+                        <input type="url" id="meeting_url" name="meeting_url" class="form-control" value="{{ form.meeting_url if form else '' }}" placeholder="https://…" dir="ltr">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="location" class="form-label">{{ t.meeting_location }} <span style="color:var(--text-muted);">(In Person)</span></label>
+                        <input type="text" id="location" name="location" class="form-control" value="{{ form.location if form else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="participants" class="form-label">{{ t.meeting_participants }}</label>
+                        <input type="text" id="participants" name="participants" class="form-control" value="{{ form.participants if form else '' }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="agenda" class="form-label">{{ t.meeting_agenda }}</label>
+                    <textarea id="agenda" name="agenda" class="form-control" rows="3">{{ form.agenda if form else '' }}</textarea>
+                </div>
+
+                <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+                    <button type="submit" class="btn btn-primary">{{ t.save }}</button>
+                    <a href="/meetings/" class="btn btn-ghost">{{ t.cancel }}</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+{% endblock %}

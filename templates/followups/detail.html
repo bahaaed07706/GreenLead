@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="app-layout">
+    {% set active_nav = 'followups' %}
+    {% include "_sidebar.html" %}
+
+    <main class="main-content">
+        <header class="top-header">
+            <div class="header-title-area">
+                <a href="/followups/" style="color:var(--text-secondary); text-decoration:none; font-size:0.9rem; font-weight:600;">{{ t.back_to_followups }}</a>
+            </div>
+            <div class="header-user-area">
+                <div class="user-profile-badge">
+                    <span class="user-avatar-dot"></span>
+                    <span style="font-weight:600;">{{ username if username else 'admin' }}</span>
+                </div>
+                {% if lang == 'ar' %}
+                    <a href="/set-language?lang=en" class="lang-switch-btn">English</a>
+                {% else %}
+                    <a href="/set-language?lang=ar" class="lang-switch-btn">العربية</a>
+                {% endif %}
+                <form method="POST" action="/logout" style="margin:0;">
+                    <button type="submit" class="btn btn-ghost btn-sm">{{ t.logout }}</button>
+                </form>
+            </div>
+        </header>
+
+        <div class="content-body">
+            {% if not_found %}
+            <div class="empty-state">
+                <div class="empty-state-title">{{ t.no_followups }}</div>
+                <a href="/followups/" class="btn btn-primary" style="margin-top:1rem;">{{ t.back_to_followups }}</a>
+            </div>
+            {% else %}
+            <div class="page-header">
+                <div>
+                    <h2 class="page-title">{{ followup.title }}</h2>
+                    <div class="page-subtitle">
+                        {% if company %}{{ company.name_en }}{% endif %}
+                        {% if overdue %}· <span class="badge status-danger">{{ t.status_overdue }}</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-row">
+                    <div class="form-group">
+                        <div class="form-label">{{ t.followup_due_date }}</div>
+                        <div dir="ltr">{{ followup.due_date or '—' }}</div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-label">{{ t.followup_priority }}</div>
+                        <div>{{ followup.priority }}</div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-label">{{ t.followup_status }}</div>
+                        <div>{{ followup.status }}</div>
+                    </div>
+                </div>
+                {% if followup.description %}
+                <div class="form-group">
+                    <div class="form-label">{{ t.followup_description }}</div>
+                    <div>{{ followup.description }}</div>
+                </div>
+                {% endif %}
+                {% if followup.outcome %}
+                <div class="form-group">
+                    <div class="form-label">{{ t.followup_outcome }}</div>
+                    <div>{{ followup.outcome }}</div>
+                </div>
+                {% endif %}
+
+                {% if followup.status in ['Pending', 'In Progress'] %}
+                <form method="POST" action="/followups/{{ followup.id }}/complete" style="margin-top:1.5rem;">
+                    <div class="form-group">
+                        <label for="outcome" class="form-label">{{ t.followup_outcome }}</label>
+                        <input type="text" id="outcome" name="outcome" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-primary">{{ t.complete_followup }}</button>
+                </form>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+{% endblock %}

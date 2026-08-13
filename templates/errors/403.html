@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="app-layout">
+    {% set active_nav = '' %}
+    {% include "_sidebar.html" %}
+    <main class="main-content">
+        <header class="top-header">
+            <div class="header-title-area">
+                <a href="/" style="color:var(--text-secondary); text-decoration:none; font-size:0.9rem; font-weight:600;">{{ t.nav_home }}</a>
+            </div>
+            <div class="header-user-area">
+                <form method="POST" action="/logout" style="margin:0;">
+                    <button type="submit" class="btn btn-ghost btn-sm">{{ t.logout }}</button>
+                </form>
+            </div>
+        </header>
+        <div class="content-body">
+            <div class="empty-state" style="margin-top:3rem;">
+                <div class="empty-state-title">{{ t.access_denied_title }}</div>
+                <div class="empty-state-text">{{ t.access_denied_text }}</div>
+                <a href="/" class="btn btn-primary" style="margin-top:1rem;">{{ t.nav_home }}</a>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

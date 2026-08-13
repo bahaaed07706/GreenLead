@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="app-layout">
+    {% set active_nav = 'meetings' %}
+    {% include "_sidebar.html" %}
+
+    <main class="main-content">
+        <header class="top-header">
+            <div class="header-title-area">
+                <a href="/" style="color:var(--text-secondary); text-decoration:none; font-size:0.9rem; font-weight:600;">{{ t.nav_home }}</a>
+            </div>
+            <div class="header-user-area">
+                <div class="user-profile-badge">
+                    <span class="user-avatar-dot"></span>
+                    <span style="font-weight:600;">{{ username if username else 'admin' }}</span>
+                </div>
+                {% if lang == 'ar' %}
+                    <a href="/set-language?lang=en" class="lang-switch-btn">English</a>
+                {% else %}
+                    <a href="/set-language?lang=ar" class="lang-switch-btn">العربية</a>
+                {% endif %}
+                <form method="POST" action="/logout" style="margin:0;">
+                    <button type="submit" class="btn btn-ghost btn-sm">{{ t.logout }}</button>
+                </form>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <div class="page-header">
+                <div>
+                    <h2 class="page-title">{{ t.meetings_title }}</h2>
+                    <div class="page-subtitle">Schedule, run, and record the outcomes of your meetings</div>
+                </div>
+                <a href="/meetings/new" class="btn btn-primary">+ {{ t.add_meeting }}</a>
+            </div>
+
+            <div class="quick-actions-toolbar">
+                <a href="/meetings/?view=all" class="btn {% if view == 'all' %}btn-secondary{% else %}btn-ghost{% endif %} btn-sm">{{ t.view_all }}</a>
+                <a href="/meetings/?view=today" class="btn {% if view == 'today' %}btn-secondary{% else %}btn-ghost{% endif %} btn-sm">{{ t.view_today }}</a>
+                <a href="/meetings/?view=upcoming" class="btn {% if view == 'upcoming' %}btn-secondary{% else %}btn-ghost{% endif %} btn-sm">{{ t.view_upcoming }}</a>
+            </div>
+
+            {% if items %}
+            <div class="company-table-wrapper">
+                <table class="company-table">
+                    <thead>
+                        <tr>
+                            <th>{{ t.meeting_subject }}</th>
+                            <th>{{ t.meeting_date }}</th>
+                            <th dir="ltr">{{ t.meeting_start }}</th>
+                            <th>{{ t.meeting_type }}</th>
+                            <th>{{ t.meeting_status }}</th>
+                            <th style="text-align:end;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in items %}
+                        <tr>
+                            <td><a href="/meetings/{{ row.m.id }}" class="table-link">{{ row.m.subject }}</a></td>
+                            <td dir="ltr" style="color:var(--text-secondary); font-size:0.88rem;">{{ row.m.meeting_date or '—' }}</td>
+                            <td dir="ltr" style="color:var(--text-secondary); font-size:0.88rem;">{{ row.m.start_time or '—' }}{% if row.m.end_time %}–{{ row.m.end_time }}{% endif %}</td>
+                            <td>
+                                {% if row.m.meeting_type == 'Online' %}{{ t.meeting_type_online }}
+                                {% elif row.m.meeting_type == 'In Person' %}{{ t.meeting_type_in_person }}
+                                {% else %}{{ t.meeting_type_phone }}{% endif %}
+                            </td>
+                            <td>
+                                {% if row.missing_outcome %}<span class="badge status-warning">{{ t.meetings_missing_outcome }}</span>
+                                {% elif row.m.status == 'Completed' %}<span class="badge status-verified">{{ t.m_status_completed }}</span>
+                                {% elif row.m.status == 'Cancelled' %}<span class="badge status-unverified">{{ t.m_status_cancelled }}</span>
+                                {% elif row.m.status == 'No Show' %}<span class="badge status-danger">{{ t.m_status_no_show }}</span>
+                                {% else %}<span class="badge status-unverified">{{ t.m_status_scheduled }}</span>{% endif %}
+                            </td>
+                            <td style="text-align:end;">
+                                {% if row.m.meeting_type == 'Online' and row.m.meeting_url %}
+                                <a href="{{ row.m.meeting_url }}" target="_blank" rel="noopener noreferrer nofollow" class="btn btn-ghost btn-sm" dir="ltr">{{ t.open_meeting_link }}</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <img src="/static/images/logo.svg" alt="GreenLead" style="width:48px; opacity:0.6; margin-bottom:1rem;">
+                <div class="empty-state-title">{{ t.no_meetings }}</div>
+                <a href="/meetings/new" class="btn btn-primary" style="margin-top:1rem;">+ {{ t.add_meeting }}</a>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+{% endblock %}

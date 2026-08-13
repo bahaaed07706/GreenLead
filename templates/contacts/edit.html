@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="app-layout">
+    <!-- Deep Forest Sidebar Navigation -->
+    <aside class="sidebar">
+        <a href="/" class="sidebar-brand">
+            <img src="/static/images/logo.svg" alt="GreenLead Logo" class="sidebar-logo">
+            <div class="sidebar-brand-text">
+                <div class="brand-name">Green<span>Lead</span></div>
+                <div class="brand-tag">Sales Intelligence</div>
+            </div>
+        </a>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Core Operations</div>
+            <ul class="nav-menu">
+                <li>
+                    <a href="/" class="nav-link">
+                        <span>{{ t.nav_home }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/companies/" class="nav-link active">
+                        <span>{{ t.nav_companies }}</span>
+                    </a>
+                </li>
+                <li>
+                    <span class="nav-link disabled">
+                        <span>{{ t.nav_opportunities }}</span>
+                        <span class="nav-badge-disabled">Soon</span>
+                    </span>
+                </li>
+                <li>
+                    <span class="nav-link disabled">
+                        <span>{{ t.nav_assistant }}</span>
+                        <span class="nav-badge-disabled">Soon</span>
+                    </span>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- Main Workspace Canvas -->
+    <main class="main-content">
+        <!-- Top Header Bar -->
+        <header class="top-header">
+            <div class="header-title-area">
+                {% if company %}
+                    <a href="/companies/{{ company.id }}" style="color:var(--text-secondary); text-decoration:none; font-size:0.9rem; font-weight:600;">← {{ t.back_to_company }}</a>
+                {% else %}
+                    <a href="/companies/" style="color:var(--text-secondary); text-decoration:none; font-size:0.9rem; font-weight:600;">← {{ t.back_to_companies }}</a>
+                {% endif %}
+            </div>
+            
+            <div class="header-user-area">
+                <div class="user-profile-badge">
+                    <span class="user-avatar-dot"></span>
+                    <span style="font-weight:600;">{{ username if username else 'admin' }}</span>
+                </div>
+                
+                {% if lang == 'ar' %}
+                    <a href="/set-language?lang=en" class="lang-switch-btn">English</a>
+                {% else %}
+                    <a href="/set-language?lang=ar" class="lang-switch-btn">العربية</a>
+                {% endif %}
+
+                <form method="POST" action="/logout" style="margin:0;">
+                    <button type="submit" class="btn btn-ghost btn-sm">{{ t.logout }}</button>
+                </form>
+            </div>
+        </header>
+
+        <!-- Body Content -->
+        <div class="content-body">
+            {% if not_found %}
+                <div class="empty-state">
+                    <div class="empty-state-title">404</div>
+                    <div class="empty-state-text">{{ t.no_companies }}</div>
+                    <a href="/companies/" class="btn btn-primary">{{ t.back_to_companies }}</a>
+                </div>
+            {% else %}
+            <div class="page-header">
+                <div>
+                    <h2 class="page-title">{{ t.edit_contact }}</h2>
+                    <div class="page-subtitle">{{ contact.name }}</div>
+                </div>
+            </div>
+
+            {% if error %}
+            <div class="alert-error" role="alert">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="/companies/{{ company.id }}/contacts/{{ contact.id }}/edit" class="form-card">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name" class="form-label">{{ t.contact_name }} *</label>
+                        <input type="text" id="name" name="name" class="form-control"
+                               value="{{ contact.name }}"
+                               required autocomplete="name">
+                    </div>
+                    <div class="form-group">
+                        <label for="title" class="form-label">{{ t.contact_title }}</label>
+                        <input type="text" id="title" name="title" class="form-control"
+                               value="{{ contact.title }}"
+                               autocomplete="organization-title">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email" class="form-label">{{ t.contact_email }}</label>
+                        <input type="email" id="email" name="email" class="form-control"
+                               value="{{ contact.email }}"
+                               autocomplete="email" dir="ltr">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone" class="form-label">{{ t.contact_phone }}</label>
+                        <input type="tel" id="phone" name="phone" class="form-control"
+                               value="{{ contact.phone }}"
+                               autocomplete="tel" dir="ltr">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="relationship_level" class="form-label">{{ t.contact_relationship_level }}</label>
+                        <select id="relationship_level" name="relationship_level" class="form-select">
+                            <option value="Decision Maker" {% if contact.relationship_level == 'Decision Maker' %}selected{% endif %}>Decision Maker / صانع قرار</option>
+                            <option value="Executive" {% if contact.relationship_level == 'Executive' %}selected{% endif %}>Executive / تنفيذي</option>
+                            <option value="Influencer" {% if contact.relationship_level == 'Influencer' %}selected{% endif %}>Influencer / مؤقر</option>
+                            <option value="Contact" {% if contact.relationship_level == 'Contact' %}selected{% endif %}>Contact / جهة اتصال</option>
+                            <option value="Other" {% if contact.relationship_level == 'Other' %}selected{% endif %}>Other / آخر</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="justify-content: flex-end; padding-bottom: 0.25rem;">
+                        <label style="display:flex; align-items:center; gap:0.6rem; cursor:pointer; font-weight:600; color:var(--decision-maker);">
+                            <input type="checkbox" id="is_decision_maker" name="is_decision_maker" value="true"
+                                   {% if contact.is_decision_maker %}checked{% endif %} style="width:18px; height:18px; accent-color:var(--primary);">
+                            <span>★ {{ t.contact_is_decision_maker }}</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="source_url" class="form-label">{{ t.contact_source_url }}</label>
+                    <input type="url" id="source_url" name="source_url" class="form-control"
+                           value="{{ contact.source_url }}"
+                           placeholder="https://" dir="ltr">
+                </div>
+
+                <div class="form-group">
+                    <label for="notes" class="form-label">{{ t.contact_notes }}</label>
+                    <textarea id="notes" name="notes" class="form-control" rows="3">{{ contact.notes }}</textarea>
+                </div>
+
+                <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+                    <button type="submit" class="btn btn-primary">{{ t.save }}</button>
+                    <a href="/companies/{{ company.id }}" class="btn btn-ghost">{{ t.cancel }}</a>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+    </main>
+</div>
+{% endblock %}

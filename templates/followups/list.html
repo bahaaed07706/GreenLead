@@ -78,7 +78,7 @@
             </div>
             {% else %}
             <div class="empty-state">
-                <img src="/static/images/logo.svg" alt="GreenLead" style="width:48px; opacity:0.6; margin-bottom:1rem;">
+                <img src="/static/images/logo.svg" alt="{{ app_name }}" style="width:48px; opacity:0.6; margin-bottom:1rem;">
                 <div class="empty-state-title">{{ t.no_followups }}</div>
                 <a href="/followups/new" class="btn btn-primary" style="margin-top:1rem;">+ {{ t.add_followup }}</a>
             </div>

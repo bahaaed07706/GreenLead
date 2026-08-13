@@ -12,9 +12,9 @@
         </div>
         
         <div class="login-header">
-            <img src="/static/images/logo.svg" alt="GreenLead Logo" class="login-brand-logo">
-            <h1 class="login-title">Green<span style="color:var(--primary);">Lead</span></h1>
-            <div class="login-subtitle">{{ t.login_subtitle if t.login_subtitle else ("منصة استخبارات المبيعات والأمن السيبراني" if lang == "ar" else "Enterprise Sales Intelligence Platform") }}</div>
+            <img src="/static/images/logo.svg" alt="{{ app_name }} logo" class="login-brand-logo">
+            <h1 class="login-title">{{ app_name }}</h1>
+            <div class="login-subtitle">{{ app_tagline }}</div>
         </div>
         
         {% if error %}

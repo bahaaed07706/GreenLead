@@ -1,10 +1,12 @@
 {# Shared deep-forest sidebar. Pass active_nav = home|companies|followups|meetings #}
 <aside class="sidebar">
     <a href="/" class="sidebar-brand">
-        <img src="/static/images/logo.svg" alt="GreenLead Logo" class="sidebar-logo">
+        <img src="/static/images/logo.svg" alt="{{ app_name }} logo" class="sidebar-logo">
         <div class="sidebar-brand-text">
-            <div class="brand-name">Green<span>Lead</span></div>
-            <div class="brand-tag">Sales Intelligence</div>
+            {# Product name and tagline come from APP_NAME / APP_TAGLINE, so the
+               sidebar rebrands with no template edit. See docs/CUSTOMIZATION.md #}
+            <div class="brand-name">{{ app_name }}</div>
+            <div class="brand-tag">{{ app_tagline }}</div>
         </div>
     </a>
     <div class="nav-section">

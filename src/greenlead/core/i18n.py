@@ -421,6 +421,10 @@ def get_lang_context(request: Request) -> dict[str, Any]:
         "current_username": username,
         "current_role": role,
         # Branding — configurable per deployment (see docs/CUSTOMIZATION.md).
+        # These drive the page title and the sidebar wordmark, so renaming the
+        # product for your own organization needs no template edits.
+        "app_name": settings.app_name,
+        "app_tagline": settings.app_tagline,
         "org_name": settings.org_name,
         "org_industry": settings.org_industry,
     }

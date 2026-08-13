@@ -30,10 +30,17 @@ Restart the server — that's it.
 
 | Variable | Where it appears | Default |
 |---|---|---|
-| `APP_NAME` | Browser tab title, FastAPI docs title, startup log | `GreenLead` |
+| `APP_NAME` | Browser tab title, **sidebar wordmark on every page**, **login screen heading**, dashboard header, logo `alt` text, FastAPI docs title, startup log | `GreenLead` |
+| `APP_TAGLINE` | Under the wordmark in the sidebar, and the login-screen subtitle | `Sales Intelligence` |
 | `ORG_NAME` | Available to every template as `{{ org_name }}` | `Your Company` |
-| `ORG_INDUSTRY` | Sector placeholder on the new-company form, the fallback sector badge on the dashboard, and the industry keyword in the research query | `Technology` |
+| `ORG_INDUSTRY` | Sector placeholder on the new-company form, the fallback sector badge on the dashboard, the sector reported by the mock research provider, and the industry keyword in the research query | `Technology` |
 | `APP_DESCRIPTION` | The description in the OpenAPI schema at `/docs` | `Business-development & sales-intelligence platform` |
+
+Setting `APP_NAME` and `APP_TAGLINE` is enough to remove every trace of the
+stock product name from the interface — there is no template to edit. This is
+enforced by a test (`test_branding_is_driven_by_configuration` in
+`tests/test_auth.py`), which renames the product and asserts that the old name
+appears nowhere in the rendered page.
 
 These are **labels and defaults only** — no business rule, permission check or
 migration depends on them, so changing them is always safe.

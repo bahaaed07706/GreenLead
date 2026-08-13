@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     org_name: str = "Your Company"
     org_industry: str = "Technology"
     app_description: str = "Business-development & sales-intelligence platform"
+    # Shown under the product name in the sidebar.
+    app_tagline: str = "Sales Intelligence"
     app_debug: bool = False
     app_host: str = "127.0.0.1"
     app_port: int = 8000

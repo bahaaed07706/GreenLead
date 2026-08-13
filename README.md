@@ -213,10 +213,14 @@ Open **http://127.0.0.1:8000** and sign in with any demo account below.
 Set these in `.env` to rebrand the platform for your own organization — no code changes:
 
 ```bash
+APP_NAME=Acme Pipeline      # wordmark, page title, login screen — everywhere
+APP_TAGLINE=Revenue Ops     # the line under the wordmark
 ORG_NAME=Acme Corp          # your organization's name
 ORG_INDUSTRY=Manufacturing  # default sector + research keyword
-APP_NAME=Acme Pipeline      # the product name shown in the UI
 ```
+
+That is the whole rebrand — **no template edits.** A test asserts the stock
+product name disappears from the rendered pages once you set `APP_NAME`.
 
 Full guide, including adding your own fields: **[docs/CUSTOMIZATION.md](docs/CUSTOMIZATION.md)**.
 

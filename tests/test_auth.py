@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from greenlead.application import create_app
@@ -87,3 +88,14 @@ def test_secure_cookie_can_be_forced_independently_of_app_env() -> None:
         Settings(app_env="production", session_cookie_secure=False).use_secure_cookies
         is False
     )
+
+
+def test_branding_is_driven_by_configuration(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Renaming the product must not require editing any template."""
+    monkeypatch.setenv("APP_NAME", "Acme Pipeline")
+    monkeypatch.setenv("APP_TAGLINE", "Revenue Ops")
+
+    branded = TestClient(create_app()).get("/login")
+    assert "Acme Pipeline" in branded.text
+    # The stock product name must be replaced, not merely accompanied.
+    assert "GreenLead" not in branded.text

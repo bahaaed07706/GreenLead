@@ -174,7 +174,7 @@ so ids cannot be probed:
 
 ```mermaid
 sequenceDiagram
-    actor U as Employee "omar"
+    actor U as Employee omar
     participant R as Route
     participant S as Service
     participant P as Policy
@@ -208,7 +208,7 @@ erDiagram
     USERS {
         string id PK
         string username UK
-        string role "employee|manager|admin"
+        string role "employee / manager / admin"
         string password_hash
         bool   is_active
     }
@@ -239,7 +239,7 @@ erDiagram
     MEETINGS {
         string id PK
         string company_id FK
-        string meeting_type "online|in-person|phone"
+        string meeting_type "online / in-person / phone"
         string outcome "empty = needs attention"
         string owner_id FK
     }

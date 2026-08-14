@@ -19,12 +19,28 @@
 
 *The CI badge is live — it reflects the latest run of lint, type-check and the full test suite on Python 3.11 & 3.12. Coverage is enforced in that same run by a `--cov-fail-under=80` gate.*
 
+## [▶ Open the live demo](https://greenlead-demo.onrender.com)
+
+**No installation. Sign in and start clicking.**
+
+| Username | Password | Role | What you'll see |
+|---|---|---|---|
+| `admin` | `Admin@123` | Admin | Everything, plus user management and the audit log |
+| `manager` | `Manager@123` | Manager | All records across the team; can reassign owners |
+| `sara` | `Sara@123` | Employee | Only her own records |
+| `omar` | `Omar@123` | Employee | Only his own records |
+
+Sign in as **`sara`**, then as **`omar`**: each sees a different slice of the same
+database. That is record-level authorization working, not a mock-up.
+
+<sub>Hosted on a free instance that sleeps after ~15 minutes idle — the first
+request may take 30–50 seconds to wake it. The demo re-seeds itself on every
+boot, so it always starts clean and keeps no visitor data. These credentials are
+public on purpose; they exist only on this throwaway demo.</sub>
+
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/bahaaed07706/GreenLead)
 
-**Want to click around instead of reading?** The button above deploys your own
-live copy in a couple of minutes — no installation, no configuration. It reads
-[`render.yaml`](render.yaml), builds the schema, loads the demo dataset, and
-hands you a URL. Sign in with `admin` / `Admin@123`.
+*Or deploy your own copy in two minutes — the button reads [`render.yaml`](render.yaml) and configures everything.*
 
 </div>
 
@@ -37,6 +53,46 @@ GreenLead is a **CRM + sales-intelligence platform** for business-development an
 It ships **white-label**: your organization name, industry and default sector are configuration values rather than hardcoded strings, so you can adapt it to your own company, role or market without editing code — see **[docs/CUSTOMIZATION.md](docs/CUSTOMIZATION.md)**.
 
 Instead of a generic admin dashboard, it surfaces **actionable work** — companies missing a decision-maker, overdue follow-ups, meetings without a recorded outcome — and links each item straight to the fix.
+
+Most CRMs answer *"how many?"*. This one answers *"what now?"* — every record is
+run through a set of derivations, and anything that fails one becomes a queue
+item with a severity and a link to the screen that resolves it:
+
+```mermaid
+flowchart LR
+    subgraph SRC["Your records"]
+        C["Companies"]
+        K["Contacts"]
+        F["Follow-ups"]
+        M["Meetings"]
+    end
+
+    subgraph CHK["Derivations — run per record"]
+        D1{"Has a<br/>decision-maker?"}
+        D2{"Due date<br/>passed?"}
+        D3{"Outcome<br/>recorded?"}
+    end
+
+    Q["Needs Attention queue<br/>severity + direct action link"]
+    T["Today workspace<br/>meetings today · next up · due now"]
+
+    C --> D1
+    K --> D1
+    F --> D2
+    M --> D3
+
+    D1 -- "no" --> Q
+    D2 -- "yes" --> Q
+    D3 -- "no" --> Q
+    F --> T
+    M --> T
+
+    style Q fill:#7c3aed,stroke:#5b21b6,color:#fff
+    style T fill:#1B7458,stroke:#145E47,color:#fff
+```
+
+The derivations are deterministic and injectable (the dashboard clock is a
+parameter), which is why they are covered by tests rather than eyeballed.
 
 > **Honesty note:** this is an actively-developed product, not a finished commercial release. The status of every capability is stated transparently below — nothing is claimed "done" unless it is implemented **and** tested.
 
@@ -89,15 +145,109 @@ Legend: ✅ implemented & tested · 🟡 partial · 🔭 planned · 🔒 archite
 Clean, layered, and boring on purpose — every request flows one way, and authorization lives in exactly one place.
 
 ```mermaid
-flowchart LR
-    B["🌐 Browser<br/>(Jinja2, AR-RTL / EN-LTR)"] --> R["FastAPI Route<br/>(thin)"]
-    R --> S["Application Service<br/>authorized *_for(actor) methods"]
-    S --> P["🔐 Policy layer<br/>(single source of truth)"]
-    S --> C["Repository Contract<br/>(ABC)"]
-    C --> A["Storage Adapter<br/>In-Memory · SQLAlchemy · Google Sheets"]
-    A --> DB[("SQLite / PostgreSQL")]
-    S --> AU["Audit + Analytics<br/>(separate stores)"]
+flowchart TD
+    B["Browser<br/>Jinja2 · AR-RTL / EN-LTR"]
+    R["FastAPI Route<br/>api/routes — thin, no logic"]
+    S["Application Service<br/>services — *_for(actor) methods"]
+    P["Policy Layer<br/>core/policy.py — the only authority"]
+    C["Repository Contract<br/>repositories/base.py — ABC"]
+    A["Storage Adapter<br/>memory · sql · sheets"]
+    DB[("SQLite / PostgreSQL")]
+    AU["Audit + Analytics<br/>separate stores"]
+
+    B --> R --> S
+    S -- "every call, first" --> P
+    S --> C --> A --> DB
+    S -.-> AU
+
+    style P fill:#7c3aed,stroke:#5b21b6,color:#fff
 ```
+
+Every permission decision in the system passes through the purple node. There is
+no second path — that is what makes the authorization auditable.
+
+### How a request is authorized
+
+The interesting case is a user reaching for a record that is not theirs. A
+forbidden record and a record that does not exist produce the **same** response,
+so ids cannot be probed:
+
+```mermaid
+sequenceDiagram
+    actor U as Employee "omar"
+    participant R as Route
+    participant S as Service
+    participant P as Policy
+    participant DB as Repository
+
+    U->>R: GET /companies/{id}  (a colleague's record)
+    R->>S: get_company_for(actor, id)
+    S->>DB: fetch(id)
+    DB-->>S: record (owner = "sara")
+    S->>P: can_view(actor, owner_id)
+    P-->>S: false
+    S--)R: AccessDenied
+    R-->>U: 404 Not Found
+
+    Note over U,R: A non-existent id returns 404 as well —<br/>the two cases are indistinguishable.
+```
+
+### Data model
+
+```mermaid
+erDiagram
+    USERS ||--o{ COMPANIES : owns
+    USERS ||--o{ CONTACTS : owns
+    USERS ||--o{ FOLLOWUPS : owns
+    USERS ||--o{ MEETINGS : owns
+    COMPANIES ||--o{ CONTACTS : "has"
+    COMPANIES ||--o{ FOLLOWUPS : "tracked by"
+    COMPANIES ||--o{ MEETINGS : "scheduled with"
+    CONTACTS ||--o{ MEETINGS : "attends"
+
+    USERS {
+        string id PK
+        string username UK
+        string role "employee|manager|admin"
+        string password_hash
+        bool   is_active
+    }
+    COMPANIES {
+        string id PK
+        string name_en
+        string name_ar
+        string domain "duplicate-checked"
+        string sector
+        string verification_status
+        string owner_id FK
+    }
+    CONTACTS {
+        string id PK
+        string company_id FK
+        string name
+        bool   is_decision_maker
+        string verification_status
+        string owner_id FK
+    }
+    FOLLOWUPS {
+        string id PK
+        string company_id FK
+        string due_date "drives overdue/today/upcoming"
+        string status
+        string owner_id FK
+    }
+    MEETINGS {
+        string id PK
+        string company_id FK
+        string meeting_type "online|in-person|phone"
+        string outcome "empty = needs attention"
+        string owner_id FK
+    }
+```
+
+Every record carries an `owner_id`. That single column is what the policy layer
+reads, and it is why record-level scoping works identically across all four
+entities.
 
 **Principles**
 - **Routes are thin** — no SQL, no business rules, no permission decisions in templates.
@@ -116,7 +266,7 @@ src/greenlead/
 └── models/            # Pydantic domain schemas
 templates/             # Jinja2 (shared _sidebar partial, bilingual)
 migrations/            # Alembic revisions
-tests/                 # 141 tests (unit, route, IDOR, audit, migrations)
+tests/                 # 144 tests (unit, route, IDOR, audit, migrations)
 ```
 
 ---
@@ -135,12 +285,15 @@ tests/                 # 141 tests (unit, route, IDOR, audit, migrations)
 
 ---
 
-## ☁️ One-click hosted demo
+## ☁️ Hosted demo
+
+A live instance runs at **https://greenlead-demo.onrender.com** — sign in with
+any account from the [demo table](#-demo-accounts).
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/bahaaed07706/GreenLead)
 
-[`render.yaml`](render.yaml) is a complete Render Blueprint, so the deploy needs
-no manual configuration. On every boot the instance:
+[`render.yaml`](render.yaml) is a complete Render Blueprint, so deploying your
+own copy needs no manual configuration. On every boot the instance:
 
 1. runs `alembic upgrade head` to build the schema,
 2. runs `scripts/seed_demo.py` to load users, companies, contacts, follow-ups
